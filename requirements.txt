@@ -1,6 +1,1 @@
-simpy
-pyephem
-pygame
-
 # not sure if this is what it's supposed to look like
-
