@@ -1,1 +1,4 @@
-# not sure if this is what it's supposed to look like
+matplotlib~=3.5.0
+numpy~=1.21.4
+sgp4~=2.20
+loguru~=0.5.3
