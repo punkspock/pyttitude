@@ -43,7 +43,7 @@ t = '2 25544  51.6439 211.2001 0007417  17.6667  85.6398 15.50103472202482'
 satellite = Satrec.twoline2rv(s, t)
 
 # system variables
-starting_day = 2465827  # Days since 12:00 January 1, 4713 BC
+starting_day = 2458127  # Julian Date (Days since 12:00 January 1, 4713 BC)
 days = 14  # Days in this simulation
 accuracy = 2400  # Number of measured points per day
 iterations = days * accuracy  # days * accuracy
@@ -59,7 +59,7 @@ for day in range(days):
         # TODO Replace below with an actual simulation
         err, pos, vel = satellite.sgp4(_day, _accuracy)
 
-        # parse current piont
+        # parse current point
         curr_point = Point(x=pos[0], y=pos[1], z=pos[2])
         logger.info(f"Parsed point {curr_point}")
 
