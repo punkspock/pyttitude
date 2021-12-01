@@ -2,3 +2,5 @@ matplotlib~=3.5.0
 numpy~=1.21.4
 sgp4~=2.20
 loguru~=0.5.3
+requests~=2.26.0
+simpy~=4.0.1
