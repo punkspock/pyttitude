@@ -86,9 +86,9 @@ class SatelliteControl(SatelliteSim):  # SatelliteControl extends SatelliteSim
                     draw_arrow(
                         self.ax,
                         self.pyttitude.pos,
-                        Point(self.pyttitude.pos.x + (self.pyttitude.z_face.x / 1),
-                              self.pyttitude.pos.y + (self.pyttitude.z_face.y / 1),
-                              self.pyttitude.pos.z + (self.pyttitude.z_face.z / 1)),
+                        Point(self.pyttitude.pos.x + (self.pyttitude.z_face.x / 15),
+                              self.pyttitude.pos.y + (self.pyttitude.z_face.y / 15),
+                              self.pyttitude.pos.z + (self.pyttitude.z_face.z / 15)),
                         color="r"
                     )
 
