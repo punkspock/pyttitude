@@ -1,4 +1,4 @@
-matplotlib~=3.5.0
+matplotlib~=3.4.1
 numpy~=1.21.4
 sgp4~=2.20
 loguru~=0.5.3
