@@ -1,13 +1,22 @@
+<<<<<<< HEAD
 # imports
 import numpy as np
 # import astropy as ap
+=======
+import random
+from dataclasses import dataclass
+
+import numpy as np
+import requests as requests
+import simpy
+>>>>>>> 14a956a309b10ea83d874d41c1c07b147636e682
 from loguru import logger
 from matplotlib import pyplot as plt
 from sgp4.api import Satrec
 from astropy.coordinates import cartesian_to_spherical, spherical_to_cartesian
 
-from dataclasses import dataclass
 
+<<<<<<< HEAD
 # constants
 earth_radius = 6371
 
@@ -16,6 +25,10 @@ earth_radius = 6371
 container of data. """
 @dataclass  # dataclass wrapper
 class Cartesian:  # a position vector  # point
+=======
+@dataclass  # dataclass wrapper
+class Point:  # a position vector
+>>>>>>> 14a956a309b10ea83d874d41c1c07b147636e682
     x: float
     y: float
     z: float
@@ -75,6 +88,7 @@ def create_world(ax, earth_rad, scaling_factor, accuracy=20j):
     ax.plot_wireframe(x, y, z, color="b")
 
 
+<<<<<<< HEAD
 def radial(earth_radius, theta, eccentricity):
     """
     Radial distance as a function of radius of the earth, polar angle, and eccentricity.
@@ -164,20 +178,28 @@ class Satellite:
 
 
 def plot(ax, begin, end):
+=======
+def plot(ax, begin, end, color):
+>>>>>>> 14a956a309b10ea83d874d41c1c07b147636e682
     """
     Plot a line from point_a to point_b
     :param ax: The current axis
     :param Point begin: Starting point
     :param Point end: End point
+<<<<<<< HEAD
+=======
+    :param color: The color of this line
+>>>>>>> 14a956a309b10ea83d874d41c1c07b147636e682
     """
     ax.plot(
         [begin.x, end.x],
         [begin.y, end.y],
         [begin.z, end.z],
-        color="r"
+        color=color
     )
 
 
+<<<<<<< HEAD
 def loop(ax, starting_day, days, accuracy, fig, satellite):
     _prev_point = None
     iterations = days * accuracy  # days * accuracy
@@ -203,15 +225,30 @@ def loop(ax, starting_day, days, accuracy, fig, satellite):
 
             # save current point as previous point
             _prev_point = curr_point
+=======
+def fetch_satellites():
+    """
+    Downloads the latest TLEs from CelesTrak
+    :return: A list of TLE dictionaries
+    """
+    stations_url = "https://www.celestrak.com/NORAD/elements/stations.txt"
+    stations = requests.get(stations_url).text.strip()
+>>>>>>> 14a956a309b10ea83d874d41c1c07b147636e682
 
-            # flush_events, draw canvas
-            fig.canvas.flush_events()
-            fig.canvas.draw()
+    def chunked(list_):
+        for i in range(0, len(list_), 3):
+            yield list_[i:i + 3]
 
-            logger.info(f"Completed: {(i + 1) * (day + 1):05}/{iterations:05}")
+    for line in chunked(stations.split('\r\n')):
+        yield {
+            "n": line[0],
+            "s": line[1],
+            "t": line[2]
+        }
 
 
 def main():
+
     # set interactive mode to on
     plt.ion()  # enabling interactive mode
 
@@ -226,18 +263,71 @@ def main():
     scaling_factor = 0.8  # the scale that at which earth will be displayed
     create_world(ax, earth_rad, scaling_factor)
 
-    # priming satellite data
-    s = '1 25544U 98067A   21334.26436330  .00005004  00000-0  99898-4 0  9996'
-    t = '2 25544  51.6438 241.5382 0004274 259.9657 242.7293 15.48711525314336'
-    satellite = Satrec.twoline2rv(s, t)
-
     # system variables
-    starting_day = 2458127  # Julian Date (Days since 12:00 January 1, 4713 BC)
-    days = 14  # Days in this simulation
-    accuracy = 2400  # Number of measured points per day
+    starting_day = 2459549  # Julian Date (Days since 12:00 January 1, 4713 BC)
 
-    # begin "simulation"
-    loop(ax, starting_day, days, accuracy, fig, satellite)
+    # Satellite object
+    class Satellite:
+        def __init__(self, env_, id_, sat, color):
+            self.env = env_
+            self.id = id_
+            self.satellite = sat
+            self.color = color
+            self._iter_per_day = 1440
+            self._prev_point = None
+            self.action = env_.process(self.run())
+
+        def run(self):
+            while True:
+                # TODO eventually replace day with something that works
+                for day in range(10000):
+                    for i in range(self._iter_per_day):
+
+                        _day, _accuracy = starting_day + day, (1 / self._iter_per_day) * i
+                        # TODO Replace below with an actual simulation
+                        err, pos, vel = self.satellite.sgp4(_day, _accuracy)
+
+                        # parse current point
+                        curr_point = Point(x=pos[0], y=pos[1], z=pos[2])
+
+                        # write previous point if not set
+                        if self._prev_point is None:
+                            self._prev_point = curr_point
+                            continue
+
+                        plot(ax, self._prev_point, curr_point, self.color)
+
+                        # save current point as previous point
+                        self._prev_point = curr_point
+
+                        # flush_events, draw canvas
+                        fig.canvas.flush_events()
+                        fig.canvas.draw()
+
+                        logger.info(f"Completed {self.id} {(i+1) * (day+1):04}/{self._iter_per_day:04}")
+                        yield self.env.timeout(1)
+
+    logger.info("Fetching from celestrak...")
+    satellites = fetch_satellites()
+
+    logger.info("Instantiating environment")
+    env = simpy.Environment()
+
+    def random_color():
+        r = random.random()
+        g = random.random()
+        b = random.random()
+        return r, g, b
+
+    logger.info("Loading satellites")
+    for val in satellites:
+        Satellite(env, val["n"], Satrec.twoline2rv(val["s"], val["t"]), random_color())
+
+    iterations = 10  # Run the simulation for 10 minutes
+    logger.info(f"Begin simulation with {iterations} iterations")
+    env.run(iterations)
+
+    logger.info("Finished simulation")
 
     # turn off interactive mode
     plt.ioff()
