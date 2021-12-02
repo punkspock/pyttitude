@@ -1,27 +1,58 @@
+# imports
 import numpy as np
+# import astropy as ap
 from loguru import logger
 from matplotlib import pyplot as plt
 from sgp4.api import Satrec
+from astropy.coordinates import cartesian_to_spherical, spherical_to_cartesian
 
 from dataclasses import dataclass
 
+# constants
+earth_radius = 6371
 
-@dataclass
-class Point:
+
+""" shorthand for instantiating an object that is really just a
+container of data. """
+@dataclass  # dataclass wrapper
+class Cartesian:  # a position vector  # point
     x: float
     y: float
     z: float
 
+    # holy shit
+    def spherical(self):
+        return cartesian_to_spherical(self.x, self.y, self.z)
 
-class Vector(Point):
+
+@dataclass
+class Spherical:  # a position vector  # point
+    r: float
+    theta: float
+    phi: float
+
+    def cartesian(self):
+        return spherical_to_cartesian(self.r, self.theta, self.phi)
+
+
+# This is just here so Nick could show me what he was talking about lol
+class Vector(Cartesian):
     pass
 
 
+@dataclass
+class Sat:
+    point: Spherical  # where it is  # can be spherical or cartesian
+    vector: Vector  # where it's going  # idk man
+    inclination: Theta  # is this necessary?  # degrees
+
+
+#
 def create_corners(ax, size):
     """
-    Plot corners to fix view
-    :param ax: The current axis
-    :param size: The absolute value max of a single direction from origin
+    Plot corners to fix view. You're basically placing the corners of a cube.
+    :param ax: The current axis in a matplotlib fig
+    :param int size: The absolute value max of a single direction from origin
     """
     for x in [-1, 1]:
         for y in [-1, 1]:
@@ -33,9 +64,9 @@ def create_world(ax, earth_rad, scaling_factor, accuracy=20j):
     """
     Create a lattice representation of the earth
     :param ax: The current axis
-    :param earth_rad: The radius of the earth
-    :param scaling_factor: The scaling factor
-    :param accuracy: The number of lattices
+    :param int earth_rad: The radius of the earth
+    :param float scaling_factor: The scaling factor
+    :param complex accuracy: The number of lattices
     """
     u, v = np.mgrid[0:2 * np.pi:accuracy, 0:np.pi:accuracy]
     x = np.cos(u) * np.sin(v) * earth_rad * scaling_factor
@@ -44,12 +75,100 @@ def create_world(ax, earth_rad, scaling_factor, accuracy=20j):
     ax.plot_wireframe(x, y, z, color="b")
 
 
+def radial(earth_radius, theta, eccentricity):
+    """
+    Radial distance as a function of radius of the earth, polar angle, and eccentricity.
+    :param radius: float in meters.
+    :param theta: float in degrees.
+    :param eccentricity: float.
+    :return:
+    """
+    r_theta = (earth_radius * (1 - e**2)) / (1 + e * np.cos(theta))
+
+    return r_theta
+
+
+# propagation function
+# object -> needs to be calculated
+# time unit -> how long tho?
+# vectors -> List[Vectors]
+
+# TODO: make this a method that belongs to the satellite class
+def propagate(satellite):
+    """
+
+    :param Sat satellite: Satellite object with point and vector.
+    :return:
+    """
+
+
+    from_ = satellite.point  # where it's coming from
+    to_ = satellite.vector  # where it's going
+
+
+    orbit_theta = 90.00 - satellite.inclination  # in degrees
+    orbit_radius = radial(satellite.inclination) # point
+    orbit_phi =  # here's where I get lost
+    satellite.vector = (orbit_radius, orbit_theta, orbit_phi)  # vector
+    return
+
+
+# reStructuredText
+def car(env):
+    """
+
+    :param simpy.core.Environment env: SimPy environment
+    :return:
+    """
+    while True:
+        print('Start parking at %d' % env.now)
+        parking_duration = 5
+        yield env.timeout(parking_duration)
+
+        print('Start driving at %d' % env.now)
+        trip_duration = 2
+        yield env.timeout(trip_duration)
+
+
+# Satellite object
+class Satellite:
+    def __init__(self, env):
+        self.env = env
+        self.action = env.process(self.run())
+
+    def run(self):
+        while True:
+            print("Start orbit at {}".format(self.env.now))  # simpy.Environment.now is a Thing(TM)
+            orbit_duration = 1  # minutes
+            yield self.env.timeout(orbit_duration)
+
+            # recalculate position every minute. 90 minutes to an orbit.
+            # only think about gravity for right now
+
+
+# >>> import simpy
+# >>> env = simpy.Environment()
+# >>> env.process(car(env))
+# <Process(car) object at 0x...>
+# env.run(until=15)
+# parked 1: 0
+# parked 2: 0
+# drivin 1: 5
+# drivin 2: 5
+# parked 1: 7
+# parked 2: 7
+# drivin 1: 12
+# drivin 2: 12
+# parked 1: 14
+# parked 2: 14
+
+
 def plot(ax, begin, end):
     """
     Plot a line from point_a to point_b
     :param ax: The current axis
-    :param begin: Starting point
-    :param end: End point
+    :param Point begin: Starting point
+    :param Point end: End point
     """
     ax.plot(
         [begin.x, end.x],
@@ -60,7 +179,6 @@ def plot(ax, begin, end):
 
 
 def loop(ax, starting_day, days, accuracy, fig, satellite):
-
     _prev_point = None
     iterations = days * accuracy  # days * accuracy
 
@@ -73,7 +191,7 @@ def loop(ax, starting_day, days, accuracy, fig, satellite):
             err, pos, vel = satellite.sgp4(_day, _accuracy)
 
             # parse current point
-            curr_point = Point(x=pos[0], y=pos[1], z=pos[2])
+            curr_point = Cartesian(x=pos[0], y=pos[1], z=pos[2])
             logger.info(f"Parsed point {curr_point}")
 
             # write previous point if not set
@@ -95,13 +213,13 @@ def loop(ax, starting_day, days, accuracy, fig, satellite):
 
 def main():
     # set interactive mode to on
-    plt.ion()
+    plt.ion()  # enabling interactive mode
 
     # begin plot data
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
+    fig = plt.figure()  # create figure
+    ax = fig.gca(projection='3d')  # make 3D axis
 
-    create_corners(ax, 7000)
+    create_corners(ax, 7000)  # place corners of View Cube (TM)
 
     # draw earth
     earth_rad = 6371  # the radius of the earth
