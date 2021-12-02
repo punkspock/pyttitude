@@ -1,22 +1,22 @@
-<<<<<<< HEAD
+
 # imports
 import numpy as np
 # import astropy as ap
-=======
+
 import random
 from dataclasses import dataclass
 
 import numpy as np
 import requests as requests
 import simpy
->>>>>>> 14a956a309b10ea83d874d41c1c07b147636e682
+
 from loguru import logger
 from matplotlib import pyplot as plt
 from sgp4.api import Satrec
 from astropy.coordinates import cartesian_to_spherical, spherical_to_cartesian
 
 
-<<<<<<< HEAD
+
 # constants
 earth_radius = 6371
 
@@ -25,10 +25,7 @@ earth_radius = 6371
 container of data. """
 @dataclass  # dataclass wrapper
 class Cartesian:  # a position vector  # point
-=======
-@dataclass  # dataclass wrapper
-class Point:  # a position vector
->>>>>>> 14a956a309b10ea83d874d41c1c07b147636e682
+
     x: float
     y: float
     z: float
@@ -57,7 +54,7 @@ class Vector(Cartesian):
 class Sat:
     point: Spherical  # where it is  # can be spherical or cartesian
     vector: Vector  # where it's going  # idk man
-    inclination: Theta  # is this necessary?  # degrees
+    # inclination: Spherical.theta  # is this necessary?  # degrees
 
 
 #
@@ -88,7 +85,7 @@ def create_world(ax, earth_rad, scaling_factor, accuracy=20j):
     ax.plot_wireframe(x, y, z, color="b")
 
 
-<<<<<<< HEAD
+
 def radial(earth_radius, theta, eccentricity):
     """
     Radial distance as a function of radius of the earth, polar angle, and eccentricity.
@@ -120,28 +117,29 @@ def propagate(satellite):
     to_ = satellite.vector  # where it's going
 
 
-    orbit_theta = 90.00 - satellite.inclination  # in degrees
+    # orbit_theta = 90.00 - satellite.inclination  # in degrees
+    # orbit_theta = 90.00 - satellite.theta
     orbit_radius = radial(satellite.inclination) # point
-    orbit_phi =  # here's where I get lost
+    # orbit_phi =  # here's where I get lost
     satellite.vector = (orbit_radius, orbit_theta, orbit_phi)  # vector
     return
 
 
 # reStructuredText
-def car(env):
-    """
-
-    :param simpy.core.Environment env: SimPy environment
-    :return:
-    """
-    while True:
-        print('Start parking at %d' % env.now)
-        parking_duration = 5
-        yield env.timeout(parking_duration)
-
-        print('Start driving at %d' % env.now)
-        trip_duration = 2
-        yield env.timeout(trip_duration)
+# def car(env):
+#     """
+#
+#     :param simpy.core.Environment env: SimPy environment
+#     :return:
+#     """
+#     while True:
+#         print('Start parking at %d' % env.now)
+#         parking_duration = 5
+#         yield env.timeout(parking_duration)
+#
+#         print('Start driving at %d' % env.now)
+#         trip_duration = 2
+#         yield env.timeout(trip_duration)
 
 
 # Satellite object
@@ -177,10 +175,9 @@ class Satellite:
 # parked 2: 14
 
 
-def plot(ax, begin, end):
-=======
+
 def plot(ax, begin, end, color):
->>>>>>> 14a956a309b10ea83d874d41c1c07b147636e682
+
     """
     Plot a line from point_a to point_b
     :param ax: The current axis
@@ -189,7 +186,7 @@ def plot(ax, begin, end, color):
 <<<<<<< HEAD
 =======
     :param color: The color of this line
->>>>>>> 14a956a309b10ea83d874d41c1c07b147636e682
+
     """
     ax.plot(
         [begin.x, end.x],
@@ -199,7 +196,6 @@ def plot(ax, begin, end, color):
     )
 
 
-<<<<<<< HEAD
 def loop(ax, starting_day, days, accuracy, fig, satellite):
     _prev_point = None
     iterations = days * accuracy  # days * accuracy
@@ -225,7 +221,7 @@ def loop(ax, starting_day, days, accuracy, fig, satellite):
 
             # save current point as previous point
             _prev_point = curr_point
-=======
+
 def fetch_satellites():
     """
     Downloads the latest TLEs from CelesTrak
@@ -233,7 +229,6 @@ def fetch_satellites():
     """
     stations_url = "https://www.celestrak.com/NORAD/elements/stations.txt"
     stations = requests.get(stations_url).text.strip()
->>>>>>> 14a956a309b10ea83d874d41c1c07b147636e682
 
     def chunked(list_):
         for i in range(0, len(list_), 3):
@@ -288,7 +283,7 @@ def main():
                         err, pos, vel = self.satellite.sgp4(_day, _accuracy)
 
                         # parse current point
-                        curr_point = Point(x=pos[0], y=pos[1], z=pos[2])
+                        curr_point = Cartesian(x=pos[0], y=pos[1], z=pos[2])
 
                         # write previous point if not set
                         if self._prev_point is None:
