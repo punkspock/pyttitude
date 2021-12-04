@@ -69,6 +69,8 @@ class SatelliteControl(SatelliteSim):  # SatelliteControl extends SatelliteSim
                     _day, _accuracy = self.starting_day + day, (1 / self._iter_per_day) * i
                     err, pos, vel = self.satellite.sgp4(_day, _accuracy)
 
+                    logger.info(f"Begin {self.id} {(i + 1) * (day + 1):04}/{self._iter_per_day:04}")
+
                     # update pyttitude
                     self.pyttitude.update(pos=Point(pos[0], pos[1], pos[2]))
 
@@ -123,5 +125,5 @@ class SatelliteControl(SatelliteSim):  # SatelliteControl extends SatelliteSim
                     self.fig.canvas.flush_events()
                     self.fig.canvas.draw()
 
-                    logger.info(f"Completed {self.id} {(i + 1) * (day + 1):04}/{self._iter_per_day:04}")
+                    logger.info(f"Sat position {curr_point}")
                     yield self.env.timeout(1)

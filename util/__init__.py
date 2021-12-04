@@ -13,9 +13,16 @@ class Point:  # a position vector
     y: float
     z: float
 
+    def _str(self) -> str:
+        return f"(x={self.x:.3f}, y={self.y:.3f}, z={self.z:.3f})"
+
+    def __str__(self):
+        return f"Point{self._str()}"
+
 
 class Vector(Point):
-    pass
+    def __str__(self):
+        return f"Vector{self._str()}"
 
 
 def create_corners(ax, size):
